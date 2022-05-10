@@ -16,15 +16,15 @@ echo $MONGO_DB_NAME
 
 # Setup command dev db container
 # *** MUST make sure mongo-net is created via the 'docker network create' command
-# docker run -d --name mongo-tester --network mongo-net -p "27017:27017" mongo-tester
+# docker run -d --name tarp-mongo-tester --network mongo-net -p "27017:27017" tarp-mongo-tester
 
 # Build dev image
-# docker build --tag mongo-tester -f ./mongodockerfile .
+# docker build --tag tarp-mongo-tester -f ./mongodockerfile .
 
-docker start mongo-tester
+docker start tarp-mongo-tester
 
 # Start up nodemon
 npm run dev
 
 # Command to connect to mongo server as shell
-# docker run --rm -it --network mongo-net mongo:latest mongo --host mongo-tester --username root --password hunter2 --authenticationDatabase admin
+# docker run --rm -it --network mongo-net mongo:latest mongo --host tarp-mongo-tester --username root --password hunter2 --authenticationDatabase admin
