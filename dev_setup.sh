@@ -1,3 +1,30 @@
 #!/usr/bin/bash
 
-# This will have scripts and useful commands related to development. More to follow...
+# to run:
+# . dev_setup.sh
+# ^-- The dot is important, it makes it so the enviroment variables are set to your current terminal instead of some random one that dies immediatly after
+
+export MONGO_HOST="localhost"
+export MONGO_USER="db-manager"
+export MONGO_PASSWORD="hunter2"
+export MONGO_DB_NAME="tarpaulin"
+
+echo $MONGO_HOST
+echo $MONGO_USER
+echo $MONGO_PASSWORD
+echo $MONGO_DB_NAME
+
+# Setup command dev db container
+# *** MUST make sure mongo-net is created via the 'docker network create' command
+# docker run -d --name mongo-tester --network mongo-net -p "27017:27017" mongo-tester
+
+# Build dev image
+# docker build --tag mongo-tester -f ./mongodockerfile .
+
+docker start mongo-tester
+
+# Start up nodemon
+npm run dev
+
+# Command to connect to mongo server as shell
+# docker run --rm -it --network mongo-net mongo:latest mongo --host mongo-tester --username root --password hunter2 --authenticationDatabase admin
