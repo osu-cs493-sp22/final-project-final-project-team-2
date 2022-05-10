@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+# This will have scripts and useful commands related to development. More to follow...
