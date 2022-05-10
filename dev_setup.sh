@@ -1,5 +1,14 @@
 #!/usr/bin/bash
 
+# First time setup:
+# -----------------
+# 1. Setup dev db container
+# *** MUST make sure mongo-net is created via the 'docker network create' command
+# docker run -d --name tarp-mongo-tester --network mongo-net -p "27017:27017" tarp-mongo-tester
+
+# 2. Build dev image
+# docker build --tag tarp-mongo-tester -f ./mongodockerfile .
+
 # to run:
 # . dev_setup.sh
 # ^-- The dot is important, it makes it so the enviroment variables are set to your current terminal instead of some random one that dies immediatly after
@@ -14,12 +23,6 @@ echo $MONGO_USER
 echo $MONGO_PASSWORD
 echo $MONGO_DB_NAME
 
-# Setup command dev db container
-# *** MUST make sure mongo-net is created via the 'docker network create' command
-# docker run -d --name tarp-mongo-tester --network mongo-net -p "27017:27017" tarp-mongo-tester
-
-# Build dev image
-# docker build --tag tarp-mongo-tester -f ./mongodockerfile .
 
 docker start tarp-mongo-tester
 
