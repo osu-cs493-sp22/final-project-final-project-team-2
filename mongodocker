@@ -1,0 +1,7 @@
+FROM mongo
+WORKDIR /usr/src/serv
+COPY mongo_init.js /docker-entrypoint-initdb.d/
+ENV MONGO_INITDB_ROOT_USERNAME="root"
+ENV MONGO_INITDB_ROOT_PASSWORD="hunter2"
+ENV PORT=27017
+CMD ["mongod"]
