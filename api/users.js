@@ -1,7 +1,7 @@
 const router = require("express").Router();
 
 const { validateAgainstSchema } = require("../lib/validation");
-const { generateAuthToken, requireAuthentication } = require("../lib/auth")
+const { generateAuthToken, requireAuthentication, optionalAuthentication } = require("../lib/auth")
 const { ObjectId } = require("mongodb");
 
 const {
@@ -11,15 +11,41 @@ const {
   getUserByEmail,
   validateUser,
 } = require("../models/users");
+const { restart } = require("nodemon");
 
 exports.router = router;
 
 //In progress
-router.post("/", async function (req, res) {
+router.post("/", optionalAuthentication, async function (req, res) {
   if (validateAgainstSchema(req.body, userSchema)) {
     try {
+      //Only admins can create admins and teachers
+      if (req.body.role == "instructor" || req.body.role == "admin"){ //must check permissions first
+        const authenticatedUser = getUserById(req.user);
+        if (authenticatedUser == null || authenticatedUser.role != "admin"){ //if the user is not authenticated or not an admin
+          res.status(403).send({
+            err: "You do not have the required permissions to create that user"
+          })
+          return
+        }
+      }
+      const validRoles = ["student","instructor","admin"]
+      if (!(validRoles.includes(req.body.role))){
+        res.status(400).send({
+          err: "new user does not have a valid role"
+        })
+        return
+      }
+      if (getUserByEmail(req.body.email)!=null){
+        res.status(400).send({
+          err: "A user with that email already exists"
+        })
+        return
+      }
+      //Insert that user
       const id = await insertNewUser(req.body);
       res.status(201).send({
+        description: "New User successfully added",
         _id: id,
       });
     } catch (err) {
