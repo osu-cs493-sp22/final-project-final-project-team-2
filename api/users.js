@@ -93,6 +93,14 @@ router.get("/:id", requireAuthentication, async function (req, res, next) {
   } else {
     const user = await getUserById(req.params.id);
     console.log("== req.headers:", req.headers);
+    // TODO: If instructor, should include courses taught
+    //      If student, should include the courses taken
+    var courseIds = []
+    if (user.role == "instructor"){
+      courseIds = [] //later
+    } else if (user.role == "student"){
+      courseIds = [] //also later
+    }
     if (user) {
       res.status(200).send(user);
     } else {
