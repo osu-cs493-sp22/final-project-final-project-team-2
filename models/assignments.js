@@ -11,6 +11,32 @@ const AssignmentSchema = {
 }
 exports.AssignmentSchema = AssignmentSchema
 
+exports.getAllAssignments = async function getAllAssignments(assignment) {
+  const db = getDbInstance()
+  const collection = db.collection('assignments')
+  
+  const count = await collection.countDocuments()
+  const pageSize = 10
+  const lastPage = Math.ceil(count / pageSize)
+  page = page < 1 ? 1 : page;
+  const offset = (page - 1) * pageSize
+
+  const results = await collection
+    .find({})
+    .sort({ _id: 1 })
+    .skip(offset)
+    .limit(pageSize)
+    .toArray();
+
+  return {
+    assignments: results,
+    page: page,
+    totalPages: lastPage,
+    pageSize: pageSize,
+    count: count,
+  }
+}
+
 exports.insertNewAssignment = async function insertNewAssignment(assignment) {
   const db = getDbInstance()
   const collection = db.collection('assignments')
@@ -30,4 +56,25 @@ exports.getAssignmentById = async function getAssignmentById(id) {
     { $match: { _id: new ObjectId(id) } }
   ]).toArray()
   return  assignment[0]
+}
+
+exports.deleteAssignmentById = async function deleteAssignmentsById(id) {
+  const db = getDbInstance()
+  const collection = db.collection('assignments')
+
+  const result = await collection.deleteOne({
+    _id: new ObjectId(id)
+  })
+  return result.deletedCount > 0
+}
+
+exports.updateAssignmentById = async function updateAssignmentById(id, assignment) {
+  const db = getDbInstance()
+  const collection = db.collection('assignments')
+
+  assignment = extractValidFields(assignment, AssignmentSchema)
+
+  const result = await collection.replaceOne({
+    _id: new ObjectId(id)}, assignment )
+  return result.matchedCount > 0
 }

@@ -44,7 +44,7 @@ exports.getAllCourses = async function getAllCourses(page) {
   }
 }
 
-exports.getCourseById = async fucntion getCourseById(id) {
+exports.getCourseById = async function getCourseById(id) {
   const db = getDbInstance()
   const collection = db.collection('courses')
 
