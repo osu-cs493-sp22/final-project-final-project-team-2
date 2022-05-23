@@ -81,3 +81,10 @@ exports.getCoursesPage = async function (query) {
     count: count
   }
 }
+
+exports.deleteCourse = async (id) => {
+  const db = getDbInstance()
+  const collection = db.collection("courses")
+
+  collection.deleteOne({ _id: ObjectId(id) })
+}

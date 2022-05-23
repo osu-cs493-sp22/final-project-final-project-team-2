@@ -1,10 +1,10 @@
 const router = require('express').Router();
 
-const { validateAgainstSchema } = require('../lib/validation');
+const { validateAgainstSchema, isValidUser, isValidCourse } = require('../lib/validation');
 
 const { ObjectId } = require('mongodb');
 
-const { getCoursesPage, CourseSchema, insertNewCourse } = require('../models/courses')
+const { getCoursesPage, CourseSchema, insertNewCourse, getCourseById } = require('../models/courses')
 
 exports.router = router;
 
@@ -19,6 +19,15 @@ router.get('/', async function (req, res, next) {
 
     res.status(200).json(course_page)
 
+})
+
+router.get('/:id', async (req, res, next) => {
+    if (isValidCourse(req.params.id)) {
+        result = getCourseById(req.params.id)
+        res.status(200).send(result)
+    } else {
+        next()
+    }
 })
 
 // MUST HAVE VALIDATION
@@ -42,3 +51,18 @@ router.post('/', async function (req, res, next) {
         })
     }
 })
+
+// MUST HAVE VALIDATION
+router.delete('/:id', async function (req, res, next) {
+    if (ObjectId.isValid(req.params.id) && isValidCourse(req.params.id)) {
+        if (1) { //Security check
+            await deleteCourse(req.params.id)
+            res.status(204).end()
+        } else {
+            next()
+        }
+    } else {
+        next()
+    }
+})
+
