@@ -1,16 +1,62 @@
 const { getDbInstance } = require('../lib/mongo')
 const { extractValidFields } = require('../lib/validation')
 
-const { ObjectId, countDocuments } = require('mongodb')
+const Grid = require('gridfs')
+const fs = require('fs')
+const crypto = require('crypto')
+const multer = require('multer')
+const mime = require('mime-types')
+
+const { ObjectId, countDocuments, GridFSBucket } = require('mongodb')
 
 const SubmissionSchema = {
   assignmentId : { required: true },
   studentId : { required: true },
   timestamp : { required: true },
-  grade : { required: false },
   file : { required : true }
 }
 exports.SubmissionSchema = SubmissionSchema
+
+exports.removeFile = (target_path)=>{
+
+}
+
+exports.upload = multer({
+    storage: multer.diskStorage({
+        destination: `${__dirname}/uploads`,
+        filename: (req,file,callback) => {
+            const ext = mime.lookup(file.mimetype)
+            const filename = crypto.pseudoRandomBytes(16).toString('hex')
+            callback(null,`${filename}.${ext}`)
+        }
+    })
+})
+
+exports.saveFile = async (payload) => {
+    return new Promise((resolve, reject) => {
+        const db = getDbInstance()
+        const bucket = new GridFSBucket(db, { bucketName: 'submissions'})
+        const metadata = {
+            userId: ObjectId(payload.id),
+            assignmentId: ObjectId(payload.assignment),
+            courseId: ObjectId(payload.course),
+            mimetype: payload.extension,
+            timestamp: payload.timestamp,
+            grade: undefined
+        }
+        const uploadStream = bucket.openUploadStream(payload.filename, {
+            metadata: metadata
+        })
+        fs.createReadStream(payload.path).pipe(uploadStream)
+            .on('error',(err)=> {
+                reject(err)
+            })
+            .on('finish',(result)=>{
+                console.log("== save result:", result)
+                resolve(result._id)
+            })
+    })
+}
 
 exports.insertNewSubmission = async function insertNewSubmission(submission) {
   const db = getDbInstance()
