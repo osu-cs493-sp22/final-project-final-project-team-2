@@ -5,10 +5,10 @@ const { extractValidFields } = require("../lib/validation");
 const bcrypt = require("bcryptjs");
 
 const userSchema = {
-  name: { required: true },
-  email: { required: true },
-  password: { required: true },
-  role: { required: true },
+  "name": { required: true },
+  "email": { required: true },
+  "password": { required: true },
+  "role": { required: true },
 };
 exports.userSchema = userSchema;
 
@@ -69,3 +69,10 @@ async function getUserByEmail(email, includePassword) {
   return results[0];
 };
 exports.getUserByEmail = getUserByEmail;
+
+async function clearUsers() {
+  const db = getDbInstance();
+  const collection = db.collection("users");
+  await collection.deleteMany({})
+}
+exports.clearUsers = clearUsers;

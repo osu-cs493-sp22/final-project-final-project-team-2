@@ -3,18 +3,18 @@
         "name": "Test1",
         "email": "test1@gmail.com",
         "password": "helloworld",
-        "role": "Admin"
+        "role": "admin"
     },
     {
         "name": "Test2",
         "email": "test2@gmail.com",
         "password": "helloworld",
-        "role": "Student"
+        "role": "student"
     },
     {
         "name": "Test3",
         "email": "test3@gmail.com",
         "password": "helloworld",
-        "role": "Instructor"
+        "role": "instructor"
     }
 ]
