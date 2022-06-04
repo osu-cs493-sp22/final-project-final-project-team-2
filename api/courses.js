@@ -5,19 +5,19 @@ const { validateAgainstSchema, isValidUser, isValidCourse } = require('../lib/va
 const { ObjectId } = require('mongodb');
 const { requireAuthentication } = require('../lib/auth');
 
-const { getCoursesPage, CourseSchema, insertNewCourse, getCourseById } = require('../models/courses');
+const { getCoursesPage, CourseSchema, insertNewCourse, getCourseById, getAllCourses } = require('../models/courses');
 const { getUserById } = require('../models/users');
 
 exports.router = router;
 
 router.get('/', async function (req, res, next) {
     // Build query
-    let query = req.query
+    // let query = req.query
 
     // Set sane default for page
-    query.page = parseInt(req.query.page) || 1
+    const page = parseInt(req.query.page) || 1
 
-    const course_page = await getCoursesPage(query)
+    const course_page = await getAllCourses(page)
 
     res.status(200).json(course_page)
 
@@ -25,7 +25,7 @@ router.get('/', async function (req, res, next) {
 
 router.get('/:id', async (req, res, next) => {
     if (isValidCourse(req.params.id)) {
-        result = getCourseById(req.params.id)
+        const result = await getCourseById(req.params.id)
         res.status(200).send(result)
     } else {
         next()
