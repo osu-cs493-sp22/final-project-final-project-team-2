@@ -36,7 +36,7 @@ router.post("/", optionalAuthentication, async function (req, res) {
         })
         return
       }
-      if (getUserByEmail(req.body.email)!=null){
+      if ( (await getUserByEmail(req.body.email)) != undefined) {
         res.status(400).send({
           err: "A user with that email already exists"
         })
@@ -67,7 +67,7 @@ router.post("/login", async function (req, res) {
       const user = await getUserByEmail(req.body.email);
       console.log("== user.id", user._id);
       const token = generateAuthToken(user._id);
-      res.status(200).send({ token: token });
+      res.status(200).send({ _id: user._id, token: token });
     } else {
       res.status(401).send({
         error: "Invalid credentials",

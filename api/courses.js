@@ -1,76 +1,71 @@
 const router = require('express').Router();
 
-const {validateAgainstSchema, extractValidFields} = require('../lib/validation');
+const { validateAgainstSchema, isValidUser, isValidCourse } = require('../lib/validation');
 
 const { ObjectId } = require('mongodb');
 const { requireAuthentication } = require('../lib/auth');
 const { insertNewCourse, getAllCourses } = require('../models/courses');
 const { CourseSchema } = require("../models/courses");
 
+const { getCoursesPage, CourseSchema, insertNewCourse, getCourseById } = require('../models/courses')
+
 exports.router = router;
 
-router.post("/", requireAuthentication, async function (req, res) {
-    //only admins can use this function
-    if (req.user.role != "admin"){
-        res.status(403).send({
-            err: "You do not have the permissions to add a new course"
+router.get('/', async function (req, res, next) {
+    // Build query
+    let query = req.query
+
+    // Set sane default for page
+    query.page = parseInt(req.query.page) || 1
+
+    const course_page = await getCoursesPage(query)
+
+    res.status(200).json(course_page)
+
+})
+
+router.get('/:id', async (req, res, next) => {
+    if (isValidCourse(req.params.id)) {
+        result = getCourseById(req.params.id)
+        res.status(200).send(result)
+    } else {
+        next()
+    }
+})
+
+// MUST HAVE VALIDATION
+// left out for dev work for now
+router.post('/', async function (req, res, next) {
+    if (req.body &&
+        validateAgainstSchema(req.body, CourseSchema) &&
+        ObjectId.isValid(req.body.instrutorId)
+    ) {
+        if (1) {//Security check here
+            const id = await insertNewCourse(req.body)
+            res.status(201).send({ id: id })
+        } else {
+            res.status(403).send({
+                err: "Unauthorized to access the specified resource"
+            })
+        }
+    } else {
+        res.status(400).send({
+            err: "Bad body"
         })
-        return
     }
-    if (validateAgainstSchema(req.body, CourseSchema)) {
-        const course = extractValidFields(req.body,CourseSchema)
-        insertNewCourse(course);
+})
+
+// MUST HAVE VALIDATION
+router.delete('/:id', async function (req, res, next) {
+    if (ObjectId.isValid(req.params.id) && isValidCourse(req.params.id)) {
+        if (1) { //Security check
+            await deleteCourse(req.params.id)
+            res.status(204).end()
+        } else {
+            next()
+        }
+    } else {
+        next()
     }
-});
+})
 
-router.get("/", async function (req,res){
-    /*
-   * Compute page number based on optional query string parameter `page`.
-   * Make sure page is within allowed bounds.
-   */
-//   const db = getDbInstance()
-//   const collection = db.collection('courses')
-//   const count = await collection.countDocuments();
-  let page = parseInt(req.query.page) || 1;
-  const {courses, page_two, lastPage, pageSize, count} = getAllCourses(page)
-  const numPerPage = 10;
-//   const lastPage = Math.ceil(count / numPerPage);
-  page = page > lastPage ? lastPage : page;
-  page = page < 1 ? 1 : page;
-
-  /*
-   * Calculate starting and ending indices of businesses on requested page and
-   * slice out the corresponsing sub-array of busibesses.
-   */
-  const start = (page - 1) * numPerPage;
-  const end = start + numPerPage;
-  const pageCourses = await getAllCourses(page)
-
-  // console.log("start:",start," end:",end)
-
-  /*
-   * Generate HATEOAS links for surrounding pages.
-   */
-  const links = {};
-  if (page < lastPage) {
-    links.nextPage = `/courses?page=${page + 1}`;
-    links.lastPage = `/courses?page=${lastPage}`;
-  }
-  if (page > 1) {
-    links.prevPage = `/courses?page=${page - 1}`;
-    links.firstPage = '/courses?page=1';
-  }
-
-  /*
-   * Construct and send response.
-   */
-  res.status(200).json({
-    courses: pageCourses,
-    pageNumber: page,
-    totalPages: lastPage,
-    pageSize: numPerPage,
-    totalCount: count,
-    links: links
-  });
-
-});
