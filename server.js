@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const api = require('./api');
 const { connectToDb } = require('./lib/mongo')
 const users = require('./data/users');
-const { MongoUnexpectedServerResponseError } = require('mongodb');
 const { insertNewUser, clearUsers } = require('./models/users');
 
 const app = express();
@@ -45,10 +44,9 @@ app.use('*', function (err, req, res, next) {
 connectToDb(async function () {
   app.listen(port, async function () {
     //populate with db example user data
-    clearUsers().then(result =>{
-      console.log('bugging here')
-      users.forEach(insertNewUser());
-    });
+    // clearUsers().then(result =>{
+    //   users.forEach(insertNewUser);
+    // });
     console.log("== Server is running on port", port);
   });
 })
