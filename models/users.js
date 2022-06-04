@@ -69,7 +69,6 @@ async function getUserByEmail(email, includePassword) {
   return results[0];
 };
 exports.getUserByEmail = getUserByEmail;
-<<<<<<< HEAD
 
 async function clearUsers() {
   const db = getDbInstance();
@@ -77,5 +76,3 @@ async function clearUsers() {
   await collection.deleteMany({})
 }
 exports.clearUsers = clearUsers;
-=======
->>>>>>> master

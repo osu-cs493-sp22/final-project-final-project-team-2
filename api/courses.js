@@ -4,8 +4,6 @@ const { validateAgainstSchema, isValidUser, isValidCourse } = require('../lib/va
 
 const { ObjectId } = require('mongodb');
 const { requireAuthentication } = require('../lib/auth');
-const { insertNewCourse, getAllCourses } = require('../models/courses');
-const { CourseSchema } = require("../models/courses");
 
 const { getCoursesPage, CourseSchema, insertNewCourse, getCourseById } = require('../models/courses')
 
