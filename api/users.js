@@ -21,7 +21,7 @@ router.post("/", optionalAuthentication, async function (req, res) {
     try {
       //Only admins can create admins and teachers
       if (req.body.role == "instructor" || req.body.role == "admin"){ //must check permissions first
-        const authenticatedUser = getUserById(req.user);
+        const authenticatedUser = await getUserById(req.user);
         if (authenticatedUser == null || authenticatedUser.role != "admin"){ //if the user is not authenticated or not an admin
           res.status(403).send({
             err: "You do not have the required permissions to create that user"

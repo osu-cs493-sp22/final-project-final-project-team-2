@@ -48,21 +48,14 @@ router.get('/:id', async (req, res, next) => {
 // MUST HAVE VALIDATION
 // left out for dev work for now
 router.post('/', requireAuthentication, async function (req, res, next) {
-    // console.log(ObjectId.isValid(req.body.instrutorId))
-    // console.log(req.body)
-    if (req.user == null){
-        res.status(403).send({
-            err: "Must be logged in to access this resource"
-        })
-    }
+    console.log(req.body)
     if (req.body &&
         validateAgainstSchema(req.body, CourseSchema) &&
-        await getUserById(req.body.instructorId)
+        isValidUser(req.body.instructorId)
     ) {
         const authUser = await getUserById(req.user);
-        console.log(req.user)
-        console.log(authUser)
-        if (req.user && authUser.role == "admin") {//Security check here
+        const target_instructor = await getUserById(req.body.instructorId)
+        if (authUser.role === "admin" && target_instructor.role === "instructor") {//Security check here
             const id = await insertNewCourse(req.body)
             res.status(201).send({ id: id })
         } else {
