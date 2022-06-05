@@ -31,39 +31,35 @@ router.post('/:id/submissions',requireAuthentication, upload.single('file'), asy
     if (
         req.file &&
         req.body &&
-        validateAgainstSchema(req,body,SubmissionSchema) &&
-        ObjectId(req.params.id).isEqual(req.body.assignmentId) &&
+        validateAgainstSchema(req.body,SubmissionSchema) &&
+        req.params.id === req.body.assignmentId &&
         isValidAssignment(req.params.id) &&
         isValidUser(req.body.studentId)
     ) {
-        const db = getDbInstance()
-        const assignment = getAssignmentById(req.params.id)
-        const course = getCourseById(assignment.courseId)
-
+        const assignment = await getAssignmentById(req.params.id)
+        const course = await getCourseById(assignment.courseId)
         if (
-        ObjectId(req.params.studentId).isEqual(req.user.userId) ||
+        req.params.studentId === req.user.userId ||
         req.user.role === "admin" ||
-        ((req.user.role === "instructor") && (ObjectId(req.user).isEqual(course.instructorId)))
+        ((req.user.role === "instructor") && (ObjectId(req.user).equals(course.instructorId)))
         ) {
-            const result = await saveFile({
-                id: req.body.instructorId,
+            const timestamp = Date.now()
+            const target = {
+                id: req.body.studentId,
                 assignment: req.body.assignmentId,
-                course: course._id.toString(),
-                extension: req.file,
-                timestamp: Date.now(),
+                course: course._id,
+                timestamp: new Date(timestamp).toUTCString(),
                 filename: req.file.filename,
                 extension: req.file.filename.split(".")[0],
-                path: `${__dirname}/${this.filename}.${this.extension}`
-            })
-            removeFile(req.file.path)
-            res.send(201).send({
-                id: result
-            })
-    } else {
+                path: req.file.path
+            }
+            const result = await saveFile(target)
+            res.status(200).send({id:result.toString()})
+            
+        } else {
             removeFile(req.file.path)
             next()
         }
-
     } else {
         removeFile(req.file.path)
         next()
