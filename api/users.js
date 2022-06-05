@@ -10,8 +10,8 @@ const {
   getUserById,
   getUserByEmail,
   validateUser,
+  getUsers,
 } = require("../models/users");
-const { restart } = require("nodemon");
 
 exports.router = router;
 
@@ -108,3 +108,8 @@ router.get("/:id", requireAuthentication, async function (req, res, next) {
     }
   }
 });
+
+router.get("/", async function (req, res, next) {
+  const users = await getUsers()
+  res.status(200).send(users);
+})
