@@ -1,7 +1,7 @@
 const { getDbInstance } = require('../lib/mongo')
 const { extractValidFields } = require('../lib/validation')
 
-const { ObjectId, countDocuments } = require('mongodb')
+const { ObjectId, countDocuments, GridFSBucket } = require('mongodb')
 
 const SubmissionSchema = {
   assignmentId : { required: true },
@@ -51,6 +51,25 @@ exports.getAllSubmissions = async function getAllSubmissions(page) {
     page: page,
     totalPages: lastPage,
     pageSize: pageSize,
-    count: count 
+    count: count
   }
+}
+
+
+exports.getSubmissionInfoById = async function(id) {
+  const db = getDbInstance()
+  const bucket = new GridFSBucket(db, { bucketName: 'submissions' })
+
+  if(!ObjectId.isValid(id)) {
+    return null
+  } else {
+    const results = await bucket.find({ _id: new ObjectId }).toArray()
+    return results[0]
+  }
+}
+
+exports.getSubmissionDownloadStream = function(filename) {
+  const db = getDbInstance()
+  const bucket = new GridFSBucket(db, { bucketName: 'submissions' })
+  return bucket.openDownloadStreamByName(filename)
 }
