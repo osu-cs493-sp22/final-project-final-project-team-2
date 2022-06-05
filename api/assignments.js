@@ -5,7 +5,7 @@ const { nextTick } = require("process");
 const e = require("express");
 
 const {validateAgainstSchema,isValidAssignment,isValidUser} = require('../lib/validation');
-const {upload,saveFile, removeFile} = require('../models/submissions');
+const {upload,saveFile, removeFile,getAssignmentSubmissions} = require('../models/submissions');
 const {SubmissionSchema} = require('../models/submissions')
 const {getDbInstance} = require('../lib/mongo');
 const { requireAuthentication } = require("../lib/auth");
@@ -207,4 +207,26 @@ router.patch("/:id", requireAuthentication, async function (req, res) {
       error: "The request body did not contain fields related to Assignment objects."
     });
   }
+});
+
+
+//Get Assignment data by ID
+router.get("/:id/submissions", requireAuthentication,async function (req, res, next) {
+    if (
+        isValidAssignment(req.params.id) &&
+        isValidUser(req.user)
+    ) {
+        const authUser = await getUserById(req.user)
+        const assignment = await getAssignmentById(req.params.id)
+        const course = await getCourseById(assignment.courseId)
+        if (authUser.role === "admin" || (authUser.role === "instructor" && req.user === course.instructorId.toString())) {
+            const page = parseInt(req.query.page) || 1
+            const results = await getAssignmentSubmissions(page,req.params.id)
+            res.status(200).send(results)
+        } else {
+            next()
+        }
+    } else {
+        next()
+    }
 });

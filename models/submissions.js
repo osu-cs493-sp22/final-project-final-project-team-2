@@ -108,6 +108,44 @@ exports.getAllSubmissions = async function getAllSubmissions(page) {
   }
 }
 
+exports.getAssignmentSubmissions = async (page,id) => {
+    const db = getDbInstance()
+    const collection = db.collection("submissions.files")
+
+    const count = await collection.countDocuments()
+    const pageSize = 10;
+    const lastPage = Math.ceil(count / pageSize)
+    page = page < 1 ? 1 : page
+    const offset =  (page - 1) * pageSize
+
+    var submissions = await collection.aggregate([
+        {$match : {"metadata.assignmentId": ObjectId(id)}},
+        {$project : {_id:1,"metadata.userId":1,"metadata.timestamp":1,"metadata.grade":1}}
+    ])
+        .sort({_id:1})
+        .skip(offset)
+        .limit(pageSize)
+        .toArray()
+
+    submissions.forEach(element => {
+        element["id"] = element._id.toString()
+        element["userId"] = element.metadata.userId.toString()
+        element["timestamp"] = element.metadata.timestamp
+        element["grade"] = element.metadata.grade
+        element["link"] = `/submissions/${element._id.toString()}`
+        delete element._id
+        delete element.metadata
+    });
+
+    return {
+      submissions: submissions,
+      page: page,
+      totalPages: lastPage,
+      pageSize: pageSize,
+      count: count
+    }
+  }
+
 
 exports.getSubmissionInfoById = async function(id) {
   const db = getDbInstance()
