@@ -12,6 +12,7 @@ const {
   updateAssignmentById,
   deleteAssignmentById,
 } = require("../models/assignments");
+
 const { nextTick } = require("process");
 const { requireAuthentication } = require("../lib/auth");
 const { getUserById } = require("../models/users");
@@ -20,7 +21,7 @@ const e = require("express");
 
 exports.router = router;
 
-//testing purposes for now
+//For TESTING purposes, shows page(s) of existing assignments
 router.get("/", async function (req, res) {
   try {
     const assignmentsPage = await getAllAssignments(
@@ -34,69 +35,54 @@ router.get("/", async function (req, res) {
   }
 });
 
+//Create an Assignment
 router.post("/", requireAuthentication, async function (req, res) {
   if (validateAgainstSchema(req.body, AssignmentSchema)) {
     try {
-      //Only admin or authenticated instructor whose id matches instructorId of course can create assignment
-      const authenticate = await getUserById(req.user);
-      const course = await getCourseById(req.body.courseId); // needs courses api code ** not fully functioniing
+      const authenticatedUser = await getUserById(req.user);
+      console.log("user: ", req.user);
 
-      console.log("== req.user", authenticate);
-      console.log("== req.body.courseId", course);
+      const course = await getCourseById(req.body.courseId);
+      console.log("course: ", course);
 
-      if ((authenticate.role == "instructor" && course.instructorId) || authenticate.role == "admin") {
+      if (
+        authenticatedUser.role == "admin" ||
+        (authenticatedUser.role == "instructor" &&
+          course.instructorId == req.user)
+      ) {
         const id = await insertNewAssignment(req.body);
         res.status(200).send({
           id: id,
-          links: { assignment: "/assignments/${id}" },
+          links: {
+            assignment: `/assignments/${id}`,
+          },
         });
       } else {
         res.status(403).send({
-          err:
-            "Unauthorized access. Only admin and/or course instructor may add assignments.",
+          error: "Error, only admin or instructor can post an Assignment.",
         });
       }
     } catch (err) {
-      console.error("  -- Error:", err);
-      res
-        .status(500)
-        .send({ error: "Error, assignment creation unsuccesful." });
+      console.error(err);
+      res.status(500).send({
+        error: "Error adding assignment to database. Invalid.",
+      });
     }
   } else {
     res.status(400).send({
-      error: "Request body is invalid / missing fields.",
+      error: "Request body is not a valid assignment object. ",
     });
   }
-
-  /*
-    if() {
-        res.status(403).send({
-          error: "Unauthorized to access the specified resource"
-        });
-      } else {
-        if (validateAgainstSchema(req.body, AssignmentSchema)) {
-          const id = await insertNewAssignment(req.body);
-          res.status(200).send({
-            id: id,
-                links: { assignment: '/assignments/${id}' }
-        })
-        }
-        else {
-          res.status(400).json({
-            error: "Request body does not contain valid info."
-          });
-        }
-      }*/
 });
 
-//needs more
+//Get Assignment data by ID
 router.get("/:id", async function (req, res) {
   try {
     const assignment = await getAssignmentById(req.params.id);
     if (assignment) {
       res.status(200).send(assignment);
     } else {
-      next();
+      res.status(404).send({ error: "Specified Assignment `id` not found." }); //might change bacl to next()
     }
   } catch (err) {
     res.status(500).send({
@@ -105,6 +91,72 @@ router.get("/:id", async function (req, res) {
   }
 });
 
-router.patch("/:id", async function (req, res) {});
+//Delete Assignment by ID
+router.delete("/:id", requireAuthentication, async function (req, res) {
 
-router.delete("/:id", async function (req, res) {});
+  try {
+  const authenticatedUser = await getUserById(req.user);
+  const assignment = await getAssignmentById(req.params.id);
+  const course = await getCourseById(assignment.courseId);
+
+  console.log("course: ", course);
+  console.log("req,user: ", req.user);
+  console.log("course.instructorId: ", course.instructorId);
+
+    if (authenticatedUser.role == "admin" || (authenticatedUser.role == "instructor" && course.instructorId == req.user)) {
+      const id = req.params.id;
+      const deleteSuccessful = await deleteAssignmentById(id);
+      if (deleteSuccessful) {
+        res.status(204).send();
+      } else {
+        next()
+      }
+    } else {
+      res.status(403).send({
+        error: "Error, only admin or course instructor can delete course.",
+      });
+    } 
+  } catch(err) {
+    res.status(500).send({
+      error: "Error deleting Assignment. Wrong Assignment Id."
+    });
+  }
+});
+
+//Update Assignment data by ID
+router.patch("/:id", requireAuthentication, async function (req, res) {
+  if (req.body && req.body.courseId && req.body.title && req.body.points && req.body.due) {
+  try {
+    const authenticatedUser = await getUserById(req.user);
+    const assignment = await getAssignmentById(req.params.id);
+    const course = await getCourseById(assignment.courseId);
+  
+    console.log("course: ", course);
+    console.log("req,user: ", req.user);
+    console.log("course.instructorId: ", course.instructorId);
+  
+      if (authenticatedUser.role == "admin" || (authenticatedUser.role == "instructor" && course.instructorId == req.user)) {
+        const id = req.params.id;
+        const updateSuccesful = updateAssignmentById(assignment._id, req.body)
+        if (updateSuccesful) {
+          res.status(200).send();
+        } else {
+          console.log("error")
+          next()
+        }
+      } else {
+        res.status(403).send({
+          error: "Error, only admin or course instructor can update course data.",
+        });
+      } 
+    } catch(err) {
+      res.status(404).send({
+        error: "Error updating Assignment. Specified Assignment `id` not found."
+      });
+    }
+  } else {
+    res.status(400).send({
+      error: "The request body did not contain fields related to Assignment objects."
+    });
+  }
+});
