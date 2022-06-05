@@ -5,6 +5,8 @@ const morgan = require('morgan');
 
 const api = require('./api');
 const { connectToDb } = require('./lib/mongo')
+const users = require('./data/users');
+const { insertNewUser, clearUsers } = require('./models/users');
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -39,8 +41,12 @@ app.use('*', function (err, req, res, next) {
     err: "Server error.  Please try again later."
   })
 })
-connectToDb(function () {
-  app.listen(port, function () {
+connectToDb(async function () {
+  app.listen(port, async function () {
+    //populate with db example user data
+    // clearUsers().then(result =>{
+    //   users.forEach(insertNewUser);
+    // });
     console.log("== Server is running on port", port);
   });
 })

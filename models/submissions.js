@@ -6,7 +6,6 @@ const fs = require('fs')
 const crypto = require('crypto')
 const multer = require('multer')
 const mime = require('mime-types')
-
 const { ObjectId, countDocuments, GridFSBucket } = require('mongodb')
 
 const SubmissionSchema = {
@@ -97,6 +96,25 @@ exports.getAllSubmissions = async function getAllSubmissions(page) {
     page: page,
     totalPages: lastPage,
     pageSize: pageSize,
-    count: count 
+    count: count
   }
+}
+
+
+exports.getSubmissionInfoById = async function(id) {
+  const db = getDbInstance()
+  const bucket = new GridFSBucket(db, { bucketName: 'submissions' })
+
+  if(!ObjectId.isValid(id)) {
+    return null
+  } else {
+    const results = await bucket.find({ _id: new ObjectId }).toArray()
+    return results[0]
+  }
+}
+
+exports.getSubmissionDownloadStream = function(filename) {
+  const db = getDbInstance()
+  const bucket = new GridFSBucket(db, { bucketName: 'submissions' })
+  return bucket.openDownloadStreamByName(filename)
 }
