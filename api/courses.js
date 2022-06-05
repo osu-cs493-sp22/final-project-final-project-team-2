@@ -1,12 +1,25 @@
 const router = require('express').Router();
 
-const { validateAgainstSchema, isValidUser, isValidCourse } = require('../lib/validation');
+const { 
+    validateAgainstSchema,
+    isValidUser,
+    isValidCourse
+} = require('../lib/validation');
 
 const { ObjectId } = require('mongodb');
 const { requireAuthentication } = require('../lib/auth');
 
-const { getCoursesPage, CourseSchema, insertNewCourse, getCourseById, getAllCourses } = require('../models/courses');
+
+const { 
+    getCoursesPage, 
+    CourseSchema, 
+    insertNewCourse, 
+    getCourseById,
+    getCourseAssignments,
+    getAllCourses
+} = require('../models/courses')
 const { getUserById } = require('../models/users');
+
 
 exports.router = router;
 
@@ -79,3 +92,11 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
     }
 })
 
+router.get('/:id/assignments', async (req,res,next)=>{
+    if(ObjectId.isValid(req.params.id) && isValidCourse(req.params.id)) {
+        results = await getCourseAssignments(id)
+        res.status(200).send(results)
+    } else {
+        next()
+    }
+})

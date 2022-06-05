@@ -88,3 +88,11 @@ exports.deleteCourse = async (id) => {
 
   collection.deleteOne({ _id: ObjectId(id) })
 }
+
+exports.getCourseAssignments = async (id) => {
+    const db = getDbInstance()
+    const collection = db.collection("assignments")
+
+    results = collection.find({courseId: ObjectId(id)}).toArray()
+    return results
+}

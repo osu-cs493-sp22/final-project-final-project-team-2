@@ -1,8 +1,17 @@
 const router = require("express").Router();
-
-const { validateAgainstSchema } = require("../lib/validation");
-
 const { ObjectId, Collection } = require("mongodb");
+const { path } = require('express/lib/application');
+const { nextTick } = require("process");
+const e = require("express");
+
+const {validateAgainstSchema,isValidAssignment,isValidUser} = require('../lib/validation');
+const {upload,saveFile, removeFile} = require('../models/submissions');
+const {SubmissionSchema} = require('../models/submissions')
+const {getDbInstance} = require('../lib/mongo');
+const { requireAuthentication } = require("../lib/auth");
+const { getUserById } = require("../models/users");
+const { getCourseById } = require("../models/courses");
+
 
 const {
   AssignmentSchema,
@@ -13,13 +22,56 @@ const {
   deleteAssignmentById,
 } = require("../models/assignments");
 
-const { nextTick } = require("process");
-const { requireAuthentication } = require("../lib/auth");
-const { getUserById } = require("../models/users");
-const { getCourseById } = require("../models/courses");
-const e = require("express");
+
+
 
 exports.router = router;
+
+router.post('/:id/submissions',requireAuthentication, upload.single('file'), async(req,res,next)=>{
+    if (
+        req.file &&
+        req.body &&
+        validateAgainstSchema(req,body,SubmissionSchema) &&
+        ObjectId(req.params.id).isEqual(req.body.assignmentId) &&
+        isValidAssignment(req.params.id) &&
+        isValidUser(req.body.studentId)
+    ) {
+        const db = getDbInstance()
+        const assignment = getAssignmentById(req.params.id)
+        const course = getCourseById(assignment.courseId)
+
+        if (
+        ObjectId(req.params.studentId).isEqual(req.user.userId) ||
+        req.user.role === "admin" ||
+        ((req.user.role === "instructor") && (ObjectId(req.user).isEqual(course.instructorId)))
+        ) {
+            const result = await saveFile({
+                id: req.body.instructorId,
+                assignment: req.body.assignmentId,
+                course: course._id.toString(),
+                extension: req.file,
+                timestamp: Date.now(),
+                filename: req.file.filename,
+                extension: req.file.filename.split(".")[0],
+                path: `${__dirname}/${this.filename}.${this.extension}`
+            })
+            removeFile(req.file.path)
+            res.send(201).send({
+                id: result
+            })
+    } else {
+            removeFile(req.file.path)
+            next()
+        }
+
+    } else {
+        removeFile(req.file.path)
+        next()
+    }
+})
+
+
+
 
 //For TESTING purposes, shows page(s) of existing assignments
 router.get("/", async function (req, res) {
