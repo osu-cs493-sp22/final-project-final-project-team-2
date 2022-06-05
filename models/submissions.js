@@ -65,21 +65,21 @@ exports.saveFile = async (payload) => {
     })
 }
 
-exports.insertNewSubmission = async function insertNewSubmission(submission) {
-  const db = getDbInstance()
-  const collection = db.collection('submissions')
+// exports.insertNewSubmission = async function insertNewSubmission(submission) {
+//   const db = getDbInstance()
+//   const collection = db.collection('submissions')
 
-  submission = extractValidFields(submission, SubmissionSchema)
-  submission.assignmentId = new ObjectId(submission.assignmentId)
-  submission.studentId = new ObjectId(submission.studentId)
-  const result = await collection.insertOne(submission)
+//   submission = extractValidFields(submission, SubmissionSchema)
+//   submission.assignmentId = new ObjectId(submission.assignmentId)
+//   submission.studentId = new ObjectId(submission.studentId)
+//   const result = await collection.insertOne(submission)
 
-  return result.insertedId
-}
+//   return result.insertedId
+// }
 
 exports.getSubmissionById = async function getSubmissionById(id) {
   const db = getDbInstance()
-  const collection = db.collection('submissions')
+  const collection = db.collection('submissions.files')
 
   const submission = await collection.aggregate([
     { $match : { _id: new ObjectId(id) } }
@@ -87,25 +87,37 @@ exports.getSubmissionById = async function getSubmissionById(id) {
   return submission[0]
 }
 
-exports.getAllSubmissions = async function getAllSubmissions(page) {
-  const db = getDbInstance()
-  const collection = db.collection('submissions')
+// exports.getAllSubmissions = async function getAllSubmissions(page) {
+//   const db = getDbInstance()
+//   const collection = db.collection('submissions')
 
-  const count = await collection.countDocuments()
-  const pageSize = 10;
-  const lastPage = Math.ceil(count / pageSize)
-  page = page < 1 ? 1 : page
-  const offset =  (page - 1) * pageSize
+//   const count = await collection.countDocuments()
+//   const pageSize = 10;
+//   const lastPage = Math.ceil(count / pageSize)
+//   page = page < 1 ? 1 : page
+//   const offset =  (page - 1) * pageSize
 
-  const submissions = await collection.find({}).sort({_id:1}).skip(offset).limit(pageSize).toArray()
+//   const submissions = await collection.find({}).sort({_id:1}).skip(offset).limit(pageSize).toArray()
 
-  return {
-    submissions: submissions,
-    page: page,
-    totalPages: lastPage,
-    pageSize: pageSize,
-    count: count
-  }
+//   return {
+//     submissions: submissions,
+//     page: page,
+//     totalPages: lastPage,
+//     pageSize: pageSize,
+//     count: count
+//   }
+// }
+
+exports.addGrade = async (grade,id)=>{
+    const db = getDbInstance()
+    const collection = db.collection("submissions.files")
+
+    result = await collection.updateOne(
+        {_id: ObjectId(id)},
+        { $set: {"metadata.grade":parseFloat(grade)}}
+        )
+    console.log(result)
+    return result
 }
 
 exports.getAssignmentSubmissions = async (page,id) => {

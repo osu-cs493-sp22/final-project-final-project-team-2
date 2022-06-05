@@ -7,13 +7,17 @@ const {
   generateAuthToken,
   requireAuthentication,
   optionalAuthentication
-} = require("../lib/auth")
-
+} = require("../lib/auth");
+const { isValidSubmission } = require('../lib/validation');
+const { getAssignmentById } = require('../models/assignments')
+const { getCourseById } = require('../models/courses')
 const {
   getSubmissionInfoById,
   getSubmissionDownloadStream,
-  getSubmissionById
-} = require("../models/submissions")
+  getSubmissionById,
+  addGrade
+} = require("../models/submissions");
+const { getUserById } = require('../models/users');
 
 router.get('/:id', async function(req, res, next) {
   try {
@@ -65,6 +69,25 @@ router.get('/media/:filename', requireAuthentication, function(req, res, next) {
     });
     next();
   }
+})
 
 
+router.patch('/:id',requireAuthentication, async (req,res,next)=>{
+    const authUser = await getUserById(req.user)
+    if(
+        isValidSubmission(req.params.id) &&
+        req.body &&
+        req.body.grade
+    ) {
+        const submission = await getSubmissionById(req.params.id)
+        const course = await getCourseById(submission.metadata.courseId.toString())
+        if (authUser.role === "admin" || (authUser.role === "instructor" && req.user === course.instructorId.toString())) {
+            const result = await addGrade(req.body.grade,req.params.id)
+            res.status(200).json(`Grade updated for submission ${req.params.id}`)
+        } else {
+            next()
+        }
+    } else {
+        next()
+    }
 })
