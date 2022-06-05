@@ -11,7 +11,8 @@ const {
 
 const {
   getSubmissionInfoById,
-  getSubmissionDownloadStream
+  getSubmissionDownloadStream,
+  getSubmissionById
 } = require("../models/submissions")
 
 router.get('/:id', async function(req, res, next) {

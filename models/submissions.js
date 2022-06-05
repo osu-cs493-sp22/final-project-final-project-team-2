@@ -11,20 +11,27 @@ const { ObjectId, countDocuments, GridFSBucket } = require('mongodb')
 const SubmissionSchema = {
   assignmentId : { required: true },
   studentId : { required: true },
-  timestamp : { required: true },
-  file : { required : true }
 }
 exports.SubmissionSchema = SubmissionSchema
 
-exports.removeFile = (target_path)=>{
-
+exports.removeFile = async (target_path)=>{
+    return new Promise((resolve, reject) => {
+        fs.unlink(target_path, (err) => {
+            if (err) {
+                reject(err)
+            } else {
+                console.log("original removed")
+                resolve()
+            }
+        })
+    })
 }
 
 exports.upload = multer({
     storage: multer.diskStorage({
         destination: `${__dirname}/uploads`,
         filename: (req,file,callback) => {
-            const ext = mime.lookup(file.mimetype)
+            const ext = mime.extension(file.mimetype)
             const filename = crypto.pseudoRandomBytes(16).toString('hex')
             callback(null,`${filename}.${ext}`)
         }
@@ -50,8 +57,9 @@ exports.saveFile = async (payload) => {
             .on('error',(err)=> {
                 reject(err)
             })
-            .on('finish',(result)=>{
-                console.log("== save result:", result)
+            .on('finish',async (result)=>{
+                console.log("== save result:", !!result)
+                const remove = await this.removeFile(payload.path)
                 resolve(result._id)
             })
     })
