@@ -101,14 +101,42 @@ exports.getStudents = async (id) => {
     const db = getDbInstance()
     const collection = db.collection("courses")
 
-    results = collection.aggregate([
+    const results = await collection.aggregate([
         {$match: {_id: ObjectId(id)}},
-        {$unwind: "roster"},
         {$lookup: {
             from: "users",
-            localField: "roster.userId",
+            localField: "roster",
             foreignField: "_id",
+            as: "students"
         }},
-        {$project: {name:1,email:1,role:1}}
-    ])
+        {$project: {students:1}}
+    ]).toArray()
+
+    const res_body = []
+    for (const student of results[0].students) {
+        delete student.password
+        res_body.push(student)
+    }
+    return res_body
+}
+
+exports.enrollStudent = async (course,students) => {
+    const db = getDbInstance()
+    const collection = db.collection("courses")
+
+    collection.updateOne(
+        {_id: ObjectId(course)},
+        {$addToSet: { roster: {$each: students}}}
+    )
+    return true
+}
+
+exports.unenrollStudent = async (course,students) => {
+    const db = getDbInstance()
+    const collection = db.collection("courses")
+
+    collection.updateOne(
+        {_id:ObjectId(course)},
+        {$pull: {roster: {$in: students}}}
+    )
 }
