@@ -1,5 +1,7 @@
 const router = require('express').Router();
 
+const json2csv = require('json2csv').parse
+const fs = require('fs');
 const {
     validateAgainstSchema,
     isValidUser,
@@ -16,9 +18,15 @@ const {
     insertNewCourse,
     getCourseById,
     getCourseAssignments,
-    getAllCourses
+    getAllCourses,
+    getRoster,
+    enrollStudent,
+    getStudents,
+    unenrollStudent,
+    deleteCourse
 } = require('../models/courses')
 const { getUserById } = require('../models/users');
+const { getSubmissionDownloadStream, removeFile } = require('../models/submissions');
 
 
 exports.router = router;
@@ -98,6 +106,97 @@ router.get('/:id/assignments', async (req,res,next)=>{
         });
         res.status(200).send(ids)
         return
+    } else {
+        next()
+    }
+})
+
+
+router.get('/:id/students',requireAuthentication, async (req,res,next)=> {
+    const authUser = await getUserById(req.user)
+    if (isValidCourse(req.params.id)) {
+        const course = await getCourseById(req.params.id)
+        if (
+            authUser.role === "admin" ||
+            (authUser.role === "instructor" && req.params.id === course.instructorId.toString())
+         ) {
+                const results = await getStudents(req.params.id)
+
+                res.status(200).send(results)
+            } else {
+                next()
+            }
+    } else {
+        next()
+    }
+})
+
+router.get('/:id/roster',requireAuthentication, async (req,res,next)=> {
+    const authUser = await getUserById(req.user)
+    if (isValidCourse(req.params.id)) {
+        const course = await getCourseById(req.params.id)
+        if (
+            authUser.role === "admin" ||
+            (authUser.role === "instructor" && req.params.id === course.instructorId.toString())
+         ) {
+                const student_array = await getStudents(req.params.id)
+                const csv = json2csv(student_array)
+                const filePath = `${__dirname}/../tmp/${req.params.id}.csv`
+                const result = await fs.writeFile(filePath,csv,(err)=>{
+                    if(err){
+                        res.json(err).status(500)
+                    }
+                })
+                var filestream = fs.createReadStream(filePath)
+                filestream.pipe(res).status(200)
+                setTimeout(function() {
+                    removeFile(filePath)
+                }, 10000)
+            } else {
+                next()
+            }
+    } else {
+        next()
+    }
+})
+
+
+router.post('/:id/students',requireAuthentication, async (req,res,next)=> {
+    const authUser = await getUserById(req.user)
+    if (isValidCourse(req.params.id)) {
+        const course = await getCourseById(req.params.id)
+        if (
+            authUser.role === "admin" ||
+            (authUser.role === "instructor" && req.params.id === course.instructorId.toString())
+            ) {
+            var enrolled = []
+            var unenrolled = []
+            if (req.body.add && req.body.add.length) {
+                for (const student of req.body.add) {
+                    if (isValidUser(student)) {
+                        const curStudent = await getUserById(student)
+                        if (curStudent.role === "student") {
+                            enrolled.push(ObjectId(student))
+                        }
+                    }
+                }
+                result = await enrollStudent(req.params.id,enrolled)
+            }
+            if (req.body.remove && req.body.remove.length) {
+                for (const student of req.body.remove) {
+                    if (isValidUser(student)) {
+                        const curStudent = await getUserById(student)
+                        if (curStudent.role === "student") {
+                            unenrolled.push(ObjectId(student))
+                        }
+                    }
+                }
+                result = await unenrollStudent(req.params.id,unenrolled)
+            }
+            res.status(201).send()
+            } else {
+                next()
+            }
     } else {
         next()
     }
