@@ -441,7 +441,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{instructorAuthToken}}",
+									"value": "{{adminAuthToken}}",
 									"type": "string"
 								}
 							]
@@ -450,7 +450,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"subject\": \"CS\",\n    \"number\": 493,\n    \"title\": \"Cloud Application Development\",\n    \"term\": \"sp22\",\n    \"instructorId\": {{instructorId}}\n}",
+							"raw": "{\n    \"subject\": \"CS\",\n    \"number\": 494,\n    \"title\": \"Cloud Application Development\",\n    \"term\": \"sp22\",\n    \"instructorId\": \"{{instructorId}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -716,47 +716,6 @@
 						}
 					},
 					"response": []
-				},
-				{
-					"name": "Remove a specific course from the database -- Admin required",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 204\", function () {",
-									"  pm.response.to.have.status(204);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminAuthToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/courses/{{courseId}}",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"courses",
-								"{{courseId}}"
-							]
-						}
-					},
-					"response": []
 				}
 			]
 		},
@@ -796,7 +755,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"courseId\": {{courseId}},\n    \"title\": \"pain\",\n    \"points\": 100,\n    \"due\": \"2022-06-14T17:00:00-07:00\"\n}",
+							"raw": "{\n    \"courseId\": \"{{courseId}}\",\n    \"title\": \"pain\",\n    \"points\": 100,\n    \"due\": \"2022-06-14T17:00:00-07:00\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -897,6 +856,83 @@
 					"response": []
 				},
 				{
+					"name": "Create a new Submission for an Assignment -- Student of the Course Required",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const jsonResponse = pm.response.json();",
+									"pm.environment.set(\"submissionId\", jsonResponse._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{studentAuthToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/gregoryoertli/Desktop/photos/IMG_1145.jpeg"
+								},
+								{
+									"key": "assignmentId",
+									"value": "{{assignmentId}}",
+									"type": "text"
+								},
+								{
+									"key": "studentId",
+									"value": "{{studentId}}",
+									"type": "text"
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/assignments/{{assignmentId}}/submissions",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"assignments",
+								"{{assignmentId}}",
+								"submissions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Fetch the list of all Submissions for an Assignment -- Admin or Instructor Required",
 					"event": [
 						{
@@ -939,14 +975,48 @@
 					"response": []
 				},
 				{
-					"name": "Create a new Submission for an Assignment -- Student of the Course Required",
+					"name": "Fetch details on submission",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 201\", function () {",
-									"  pm.response.to.have.status(201);",
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const jsonResponse = pm.response.json();",
+									"pm.environment.set(\"downloadLink\", jsonResponse.url);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/submissions/{{submissionId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"submissions",
+								"{{submissionId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download Submission",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -954,48 +1024,68 @@
 						}
 					],
 					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
+						"auth": {
+							"type": "bearer",
+							"bearer": [
 								{
-									"key": "",
-									"type": "file",
-									"src": []
-								},
-								{
-									"key": "assignmentId",
-									"value": "{{assignmentId}}",
-									"type": "text"
-								},
-								{
-									"key": "studentId",
-									"value": "{{studentId}}",
-									"type": "text"
-								},
-								{
-									"key": "timestamp",
-									"value": "2022-06-14T17:00:00-07:00",
-									"type": "text"
-								},
-								{
-									"key": "",
-									"value": "",
-									"type": "text",
-									"disabled": true
+									"key": "token",
+									"value": "{{studentAuthToken}}",
+									"type": "string"
 								}
 							]
 						},
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{url}}/assignments/{{assignmentId}}/submissions",
+							"raw": "{{url}}{{downloadLink}}",
+							"host": [
+								"{{url}}{{downloadLink}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Deletes",
+			"item": [
+				{
+					"name": "Remove a specific course from the database -- Admin required",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminAuthToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/courses/{{courseId}}",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
-								"assignments",
-								"{{assignmentId}}",
-								"submissions"
+								"courses",
+								"{{courseId}}"
 							]
 						}
 					},

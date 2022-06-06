@@ -93,7 +93,7 @@ exports.getCourseAssignments = async (id) => {
     const db = getDbInstance()
     const collection = db.collection("assignments")
 
-    results = collection.find({courseId: ObjectId(id)}).toArray()
+    results = collection.find({courseId: id}).toArray()
     return results
 }
 

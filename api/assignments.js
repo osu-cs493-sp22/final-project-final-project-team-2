@@ -54,8 +54,8 @@ router.post('/:id/submissions',requireAuthentication, upload.single('file'), asy
                 path: req.file.path
             }
             const result = await saveFile(target)
-            res.status(200).send({id:result.toString()})
-            
+            res.status(200).send({_id:result.toString()})
+
         } else {
             removeFile(req.file.path)
             next()
@@ -99,8 +99,8 @@ router.post("/", requireAuthentication, async function (req, res) {
           course.instructorId == req.user)
       ) {
         const id = await insertNewAssignment(req.body);
-        res.status(200).send({
-          id: id,
+        res.status(201).send({
+          _id: id,
           links: {
             assignment: `/assignments/${id}`,
           },
@@ -163,7 +163,7 @@ router.delete("/:id", requireAuthentication, async function (req, res) {
       res.status(403).send({
         error: "Error, only admin or course instructor can delete course.",
       });
-    } 
+    }
   } catch(err) {
     res.status(500).send({
       error: "Error deleting Assignment. Wrong Assignment Id."
@@ -173,16 +173,16 @@ router.delete("/:id", requireAuthentication, async function (req, res) {
 
 //Update Assignment data by ID
 router.patch("/:id", requireAuthentication, async function (req, res) {
-  if (req.body && req.body.courseId && req.body.title && req.body.points && req.body.due) {
+  if (req.body) {
   try {
     const authenticatedUser = await getUserById(req.user);
     const assignment = await getAssignmentById(req.params.id);
     const course = await getCourseById(assignment.courseId);
-  
+
     console.log("course: ", course);
     console.log("req,user: ", req.user);
     console.log("course.instructorId: ", course.instructorId);
-  
+
       if (authenticatedUser.role == "admin" || (authenticatedUser.role == "instructor" && course.instructorId == req.user)) {
         const id = req.params.id;
         const updateSuccesful = updateAssignmentById(assignment._id, req.body)
@@ -196,7 +196,7 @@ router.patch("/:id", requireAuthentication, async function (req, res) {
         res.status(403).send({
           error: "Error, only admin or course instructor can update course data.",
         });
-      } 
+      }
     } catch(err) {
       res.status(404).send({
         error: "Error updating Assignment. Specified Assignment `id` not found."

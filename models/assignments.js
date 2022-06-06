@@ -75,9 +75,9 @@ exports.updateAssignmentById = async function updateAssignmentById(id, assignmen
   assignment = extractValidFields(assignment, AssignmentSchema);
   const db = getDbInstance();
   const collection = db.collection('assignments');
-  const result = await collection.replaceOne(
+  const result = await collection.updateMany(
     { _id: new ObjectId(id) },
-    assignment
+    { $set: assignment}
   );
   return result.matchedCount > 0;
 };
