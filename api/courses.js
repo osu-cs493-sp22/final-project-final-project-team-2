@@ -55,7 +55,9 @@ router.post('/', requireAuthentication, async function (req, res, next) {
     ) {
         const authUser = await getUserById(req.user);
         const target_instructor = await getUserById(req.body.instructorId)
+        
         if (authUser.role === "admin") { //Security check here
+
             const id = await insertNewCourse(req.body)
             res.status(201).send({ _id: id })
         } else {
@@ -86,9 +88,16 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
 })
 
 router.get('/:id/assignments', async (req,res,next)=>{
+    //The Tarpaulin specificaiton says this should only return a list of assignment Ids.
     if(ObjectId.isValid(req.params.id) && isValidCourse(req.params.id)) {
-        results = await getCourseAssignments(id)
-        res.status(200).send(results)
+        const course = await getCourseById(req.params.id)
+        const results = await getCourseAssignments(req.params.id)
+        var ids = []
+        results.forEach(element => {
+            ids.push(element._id)
+        });
+        res.status(200).send(ids)
+        return
     } else {
         next()
     }
