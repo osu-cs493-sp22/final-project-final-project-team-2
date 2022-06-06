@@ -25,7 +25,7 @@ router.get('/:id', async function(req, res, next) {
     if(submission) {
       const resBody = {
         _id: submission._id,
-        url: `/media/${submission.filename}`,
+        url: `/submissions/media/${submission.filename}`,
         userId: submission.metadata.userId,
         assignmentId: submission.metadata.assignmentId,
         mimetype: submission.metadata.mimetype,
@@ -52,7 +52,11 @@ router.get('/media/:filename', requireAuthentication, function(req, res, next) {
 
   const file = getSubmissionDownloadStream(req.params.filename)
 
-  if(req.user == file.metadata.userId || req.user.role == 'admin' || (req.user.role == 'teacher' && 1)) {
+  if(
+    req.params.studentId === req.user.userId ||
+    req.user.role === "admin" ||
+    ((req.user.role === "instructor") && O(bjectId(req.user).equals(course.instructorId)))
+  ){
     file.on('file', function(file) {
       res.status(200).type(file.metadata.mimetype)
     })
