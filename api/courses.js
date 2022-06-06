@@ -92,14 +92,16 @@ router.delete('/:id', requireAuthentication, async function (req, res, next) {
 })
 
 router.get('/:id/assignments', async (req,res,next)=>{
+    //The Tarpaulin specificaiton says this should only return a list of assignment Ids.
     if(ObjectId.isValid(req.params.id) && isValidCourse(req.params.id)) {
         const course = await getCourseById(req.params.id)
         const results = await getCourseAssignments(req.params.id)
-        const courseAssignments = {
-            course: course,
-            assignments: results
-        }
-        res.status(200).send(courseAssignments)
+        var ids = []
+        results.forEach(element => {
+            ids.push(element._id)
+        });
+        res.status(200).send(ids)
+        return
     } else {
         next()
     }
