@@ -140,3 +140,11 @@ exports.unenrollStudent = async (course,students) => {
         {$pull: {roster: {$in: students}}}
     )
 }
+
+exports.updateCourseById = async function updateCourseById(id, course) {
+  course = extractValidFields(course, CourseSchema);
+  const db = getDbInstance();
+  const collection = db.collection('courses');
+  const result = await collection.updateMany({ _id: new ObjectId(id) }, {$set: course});
+  return result.matchedCount > 0;
+}
