@@ -35,7 +35,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async function (req, res, next) {
     if (req.body &&
         validateAgainstSchema(req.body, CourseSchema) &&
-        ObjectId.isValid(req.body.instrutorId)
+        ObjectId.isValid(req.body.instructorId)
     ) {
         if (1) {//Security check here
             const id = await insertNewCourse(req.body)
@@ -65,4 +65,3 @@ router.delete('/:id', async function (req, res, next) {
         next()
     }
 })
-
