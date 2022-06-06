@@ -51,7 +51,7 @@ router.post('/', requireAuthentication, async function (req, res, next) {
     console.log(req.body)
     if (req.body &&
         validateAgainstSchema(req.body, CourseSchema) &&
-        isValidUser(req.body.instructorId)
+        ObjectId.isValid(req.body.instructorId)
     ) {
         const authUser = await getUserById(req.user);
         const target_instructor = await getUserById(req.body.instructorId)
@@ -93,3 +93,4 @@ router.get('/:id/assignments', async (req,res,next)=>{
         next()
     }
 })
+
