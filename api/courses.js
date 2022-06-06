@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { 
+const {
     validateAgainstSchema,
     isValidUser,
     isValidCourse
@@ -10,10 +10,10 @@ const { ObjectId } = require('mongodb');
 const { requireAuthentication } = require('../lib/auth');
 
 
-const { 
-    getCoursesPage, 
-    CourseSchema, 
-    insertNewCourse, 
+const {
+    getCoursesPage,
+    CourseSchema,
+    insertNewCourse,
     getCourseById,
     getCourseAssignments,
     getAllCourses
@@ -55,9 +55,9 @@ router.post('/', requireAuthentication, async function (req, res, next) {
     ) {
         const authUser = await getUserById(req.user);
         const target_instructor = await getUserById(req.body.instructorId)
-        if (authUser.role === "admin" && target_instructor.role === "instructor") {//Security check here
+        if (authUser.role === "admin") { //Security check here
             const id = await insertNewCourse(req.body)
-            res.status(201).send({ id: id })
+            res.status(201).send({ _id: id })
         } else {
             res.status(403).send({
                 err: "Unauthorized to access the specified resource"
@@ -93,4 +93,3 @@ router.get('/:id/assignments', async (req,res,next)=>{
         next()
     }
 })
-
