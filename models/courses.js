@@ -96,3 +96,19 @@ exports.getCourseAssignments = async (id) => {
     results = collection.find({courseId: ObjectId(id)}).toArray()
     return results
 }
+
+exports.getStudents = async (id) => {
+    const db = getDbInstance()
+    const collection = db.collection("courses")
+
+    results = collection.aggregate([
+        {$match: {_id: ObjectId(id)}},
+        {$unwind: "roster"},
+        {$lookup: {
+            from: "users",
+            localField: "roster.userId",
+            foreignField: "_id",
+        }},
+        {$project: {name:1,email:1,role:1}}
+    ])
+}

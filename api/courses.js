@@ -16,7 +16,8 @@ const {
     insertNewCourse, 
     getCourseById,
     getCourseAssignments,
-    getAllCourses
+    getAllCourses,
+    getRoster
 } = require('../models/courses')
 const { getUserById } = require('../models/users');
 
@@ -99,4 +100,31 @@ router.get('/:id/assignments', async (req,res,next)=>{
     } else {
         next()
     }
+})
+
+
+router.get('/:id/students',requireAuthentication, async (req,res,next)=> {
+    const authUser = await getUserById(req.user)
+    if (isValidCourse(req.params.id)) {
+        const course = await getCourseById(req.params.id)
+        if (
+            authUser.role === "admin" ||
+            (authUser.role === "instructor" && req.params.id === course.instructorId.toString())
+         ) {
+                const results = await getStudents(req.params.id)
+                res.status(200).send(results)
+            } else {
+                next()
+            }
+    } else {
+        next()
+    }
+})
+
+router.get('/:id/roster', async (req,res,next)=> {
+    
+})
+
+router.get('/:id/assignments', async (req,res,next)=> {
+    
 })
