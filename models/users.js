@@ -5,10 +5,10 @@ const { extractValidFields } = require("../lib/validation");
 const bcrypt = require("bcryptjs");
 
 const userSchema = {
-  name: { required: true },
-  email: { required: true },
-  password: { required: true },
-  role: { required: true },
+  "name": { required: true },
+  "email": { required: true },
+  "password": { required: true },
+  "role": { required: true },
 };
 exports.userSchema = userSchema;
 
@@ -23,6 +23,7 @@ exports.getUsers = async function getUsers() {
 
 //
 exports.insertNewUser = async function insertNewUser(user) {
+  // console.log('extracting for user', user)
   const userToInsert = extractValidFields(user, userSchema);
   const db = getDbInstance();
   const collection = db.collection("users");
@@ -30,7 +31,7 @@ exports.insertNewUser = async function insertNewUser(user) {
   //password hash
   const passwordHash = await bcrypt.hash(userToInsert.password, 8);
   userToInsert.password = passwordHash;
-  console.log("== Hashed, salted password:", userToInsert.password);
+  // console.log("== Hashed, salted password:", userToInsert.password);
 
   const result = await collection.insertOne(userToInsert);
   return result.insertedId;
@@ -69,3 +70,10 @@ async function getUserByEmail(email, includePassword) {
   return results[0];
 };
 exports.getUserByEmail = getUserByEmail;
+
+async function clearUsers() {
+  const db = getDbInstance();
+  const collection = db.collection("users");
+  await collection.deleteMany({})
+}
+exports.clearUsers = clearUsers;

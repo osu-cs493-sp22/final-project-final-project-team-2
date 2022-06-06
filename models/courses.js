@@ -1,16 +1,16 @@
-const { getDbInstance } = require('../lib/mongo')
-const { extractValidFields } = require('../lib/validation')
+const { getDbInstance } = require("../lib/mongo");
+const { extractValidFields } = require("../lib/validation");
 
-const { ObjectId, countDocuments } = require('mongodb')
+const { ObjectId, countDocuments } = require("mongodb");
 
 const CourseSchema = {
   subject: { required: true },
   number: { required: true },
   title: { required: true },
   term: { required: true },
-  instructorId: { required: true }
-}
-exports.CourseSchema = CourseSchema
+  instructorId: { required: true },
+};
+exports.CourseSchema = CourseSchema;
 
 exports.insertNewCourse = async function insertNewCourse(course) {
   const db = getDbInstance()
@@ -87,4 +87,12 @@ exports.deleteCourse = async (id) => {
   const collection = db.collection("courses")
 
   collection.deleteOne({ _id: ObjectId(id) })
+}
+
+exports.getCourseAssignments = async (id) => {
+    const db = getDbInstance()
+    const collection = db.collection("assignments")
+
+    results = collection.find({courseId: ObjectId(id)}).toArray()
+    return results
 }
