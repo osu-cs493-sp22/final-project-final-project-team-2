@@ -197,7 +197,7 @@ router.post("/:id/students", requireAuthentication, async (req, res, next) => {
         }
         result = await unenrollStudent(req.params.id, unenrolled);
       }
-      res.status(201).send();
+      res.status(200).send();
     } else {
       next();
     }
