@@ -8,6 +8,8 @@ const {
   userSchema,
   insertNewUser,
   getUserById,
+  getStudentById,
+  getInstructorById,
   getUserByEmail,
   validateUser,
   getUsers,
@@ -92,20 +94,30 @@ router.get("/:id", requireAuthentication, async function (req, res, next) {
     });
     return
   } else {
-    const user = await getUserById(req.params.id);
-    console.log("== req.headers:", req.headers);
-    // TODO: If instructor, should include courses taught
-    //      If student, should include the courses taken
-    var courseIds = []
-    if (user.role == "instructor"){
-      courseIds = [] //later
-    } else if (user.role == "student"){
-      courseIds = [] //also later
-    }
-    if (user) {
-      res.status(200).send(user);
+    console.log("req.user.role: ", req.user.role)
+    if(authenticatedUser.role == 'instructor') {
+      const user = await getInstructorById(req.params.id)
+      if(user) {
+        res.status(200).send(user)
+      } else {
+        next()
+      }
+    } else if (authenticatedUser.role == 'student') {
+      const user = await getStudentById(req.params.id)
+      if(user) {
+        res.status(200).send(user)
+      } else {
+        next()
+      }
+    } else if (authenticatedUser.role == 'admin'){
+      const user = await getUserById(req.params.id)
+      if(user) {
+        res.status(200).send(user)
+      } else {
+        next()
+      }
     } else {
-      next();
+      next()
     }
   }
 });
