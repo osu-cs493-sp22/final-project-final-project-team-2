@@ -1,13 +1,9 @@
 const router = require("express").Router();
-const { ObjectId, Collection } = require("mongodb");
-const { path } = require('express/lib/application');
-const { nextTick } = require("process");
-const e = require("express");
+const { ObjectId } = require("mongodb");
 
 const {validateAgainstSchema,isValidAssignment,isValidUser} = require('../lib/validation');
 const {upload,saveFile, removeFile,getAssignmentSubmissions} = require('../models/submissions');
 const {SubmissionSchema} = require('../models/submissions')
-const {getDbInstance} = require('../lib/mongo');
 const { requireAuthentication } = require("../lib/auth");
 const { getUserById } = require("../models/users");
 const { getCourseById } = require("../models/courses");
@@ -38,24 +34,30 @@ router.post('/:id/submissions',requireAuthentication, upload.single('file'), asy
     ) {
         const assignment = await getAssignmentById(req.params.id)
         const course = await getCourseById(assignment.courseId)
-        if (
-        req.params.studentId === req.user.userId ||
-        req.user.role === "admin" ||
-        ((req.user.role === "instructor") && (ObjectId(req.user).equals(course.instructorId)))
-        ) {
-            const timestamp = Date.now()
-            const target = {
-                id: req.body.studentId,
-                assignment: req.body.assignmentId,
-                course: course._id,
-                timestamp: new Date(timestamp).toUTCString(),
-                filename: req.file.filename,
-                extension: req.file.filename.split(".")[0],
-                path: req.file.path
-            }
-            const result = await saveFile(target)
-            res.status(200).send({_id:result.toString()})
 
+        if (course && assignment) {
+            if (
+            req.params.studentId === req.user.userId ||
+            req.user.role === "admin" ||
+            ((req.user.role === "instructor") && (ObjectId(req.user).equals(course.instructorId)))
+            ) {
+                const timestamp = Date.now()
+                const target = {
+                    id: req.body.studentId,
+                    assignment: req.body.assignmentId,
+                    course: course._id,
+                    timestamp: new Date(timestamp).toUTCString(),
+                    filename: req.file.filename,
+                    extension: req.file.filename.split(".")[1],
+                    path: req.file.path
+                }
+                const result = await saveFile(target)
+                res.status(200).send({_id:result.toString()})
+    
+            } else {
+                removeFile(req.file.path)
+                next()
+            }
         } else {
             removeFile(req.file.path)
             next()
@@ -143,15 +145,15 @@ router.get("/:id", async function (req, res) {
 router.delete("/:id", requireAuthentication, async function (req, res) {
 
   try {
-  const authenticatedUser = await getUserById(req.user);
-  const assignment = await getAssignmentById(req.params.id);
-  const course = await getCourseById(assignment.courseId);
+    const authenticatedUser = await getUserById(req.user);
+    const assignment = await getAssignmentById(req.params.id);
+    const course = await getCourseById(assignment.courseId);
 
-  console.log("course: ", course);
-  console.log("req,user: ", req.user);
-  console.log("course.instructorId: ", course.instructorId);
+    console.log("course: ", course);
+    console.log("req,user: ", req.user);
+    console.log("course.instructorId: ", course.instructorId.toString());
 
-    if (authenticatedUser.role == "admin" || (authenticatedUser.role == "instructor" && course.instructorId == req.user)) {
+    if (authenticatedUser.role === "admin" || (authenticatedUser.role === "instructor" && course.instructorId.toString() === req.user)) {
       const id = req.params.id;
       const deleteSuccessful = await deleteAssignmentById(id);
       if (deleteSuccessful) {
@@ -216,16 +218,26 @@ router.get("/:id/submissions", requireAuthentication,async function (req, res, n
         isValidAssignment(req.params.id) &&
         isValidUser(req.user)
     ) {
-        const authUser = await getUserById(req.user)
-        const assignment = await getAssignmentById(req.params.id)
-        const course = await getCourseById(assignment.courseId)
-        if (authUser.role === "admin" || (authUser.role === "instructor" && req.user === course.instructorId.toString())) {
-            const page = parseInt(req.query.page) || 1
-            const results = await getAssignmentSubmissions(page,req.params.id)
-            res.status(200).send(results)
+
+        try {
+            const authUser = await getUserById(req.user)
+            const assignment = await getAssignmentById(req.params.id)
+            const course = await getCourseById(assignment.courseId)
+
+        if (assignment && course) {
+            if (authUser.role === "admin" || (authUser.role === "instructor" && req.user === course.instructorId.toString())) {
+                const page = parseInt(req.query.page) || 1
+                const results = await getAssignmentSubmissions(page,req.params.id)
+                res.status(200).send(results)
+            } else {
+                next()
+            }
         } else {
             next()
         }
+    } catch {
+        next()
+    }
     } else {
         next()
     }

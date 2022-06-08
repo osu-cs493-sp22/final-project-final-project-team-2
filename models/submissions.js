@@ -124,7 +124,7 @@ exports.getAssignmentSubmissions = async (page,id) => {
     const db = getDbInstance()
     const collection = db.collection("submissions.files")
 
-    const count = await collection.countDocuments()
+    const count = await collection.countDocuments({"metadata.assignmentId":ObjectId(id)})
     const pageSize = 10;
     const lastPage = Math.ceil(count / pageSize)
     page = page < 1 ? 1 : page
