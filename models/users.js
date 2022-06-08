@@ -52,6 +52,40 @@ exports.getUserById = async function getUserById(id, includePassword) {
   }
 };
 
+exports.getStudentById = async function getStudentById(id) {
+  const db = getDbInstance();
+  const collection = db.collection('users')
+
+  const student = await collection.aggregate([
+    { $match: { _id: new ObjectId(id)}},
+    { $lookup: {
+      from: "courses",
+      localField: "_id",
+      foreignField: "roster",
+      as: "courses"
+    }},
+    { $unset: [ "password", "courses.subject", "courses.number", "courses.term", "courses.instructorId", "courses.roster"] }
+  ]).toArray()
+  return student[0]
+}
+
+exports.getInstructorById = async function getInstructorById(id) {
+  const db = getDbInstance()
+  const collection = db.collection('users')
+
+  const instructor = await collection.aggregate([
+    { $match: { _id: new ObjectId(id)}},
+    { $lookup: {
+      from: "courses",
+      localField: "_id",
+      foreignField: "instructorId",
+      as: "courses"
+    }},
+    { $unset: ["password", "courses.subject", "courses.number", "courses.term", "courses.instructorId", "courses.roster"] }
+  ]).toArray()
+  return instructor[0]
+}
+
 //
 exports.validateUser = async function validateUser(email, password) {
   const user = await getUserByEmail(email, true);

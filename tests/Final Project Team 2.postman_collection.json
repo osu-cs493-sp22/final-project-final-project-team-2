@@ -1246,7 +1246,6 @@
 												"exec": [
 													"pm.test(\"Status code is 400\", function () {",
 													"    pm.response.to.have.status(400);",
-													"  ",
 													"});",
 													"",
 													"pm.test(\"Request body does not contain a valid User.\", function() {",
@@ -1441,9 +1440,9 @@
 													"  pm.response.to.have.status(403);",
 													"});",
 													"",
-													"pm.test(\"Unauthorized to access the specified resource\", function() {",
+													"pm.test(\"Unauthorized User\", function() {",
 													"    const responseJson = pm.response.json();",
-													"    pm.expect(responseJson.err).to.eql(\"Unauthorized to access the specified resource\");",
+													"    pm.expect(responseJson.err).to.eql(\"Invalid authentication token\");",
 													"});"
 												],
 												"type": "text/javascript"
