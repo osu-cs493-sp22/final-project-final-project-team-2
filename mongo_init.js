@@ -16,6 +16,7 @@ db.createUser(
 db.users.insertOne({
     "name": "Brandon",
     "email": "admin@tarpaulin.com",
+    // pwd == hunter2
     "password": "$2a$08$CmzlPhVvHw6fG5FKNF1.G.CvgM1Vz8pCsBZAGtH4aOvVmwlAFfLpi",
     "role": "admin",
 })
