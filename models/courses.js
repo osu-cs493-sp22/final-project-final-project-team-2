@@ -86,6 +86,10 @@ exports.deleteCourse = async (id) => {
   const db = getDbInstance()
   const collection = db.collection("courses")
 
+  console.log(`Deleting submissions files: ${await db.collection("submissions.files").deleteMany({"metadata.courseId": ObjectId(id)})}`)
+  console.log(`Deleting submissions chunks: ${await db.collection("submissions.chunks").deleteMany({"metadata.courseId": ObjectId(id)})}`)
+  console.log(`Deleting assignments: ${await db.collection("assignments").deleteMany({courseId:ObjectId(id)})}`)
+
   collection.deleteOne({ _id: ObjectId(id) })
 }
 

@@ -65,7 +65,7 @@ router.post("/", requireAuthentication, async function (req, res, next) {
     const authUser = await getUserById(req.user);
     const target_instructor = await getUserById(req.body.instructorId);
 
-    if (authUser.role === "admin") {
+    if (authUser && authUser.role === "admin") {
       //Security check here
 
       const id = await insertNewCourse(req.body);
@@ -135,6 +135,7 @@ router.get("/:id/students", requireAuthentication, async (req, res, next) => {
 });
 
 router.get("/:id/roster", requireAuthentication, async (req, res, next) => {
+
   const authUser = await getUserById(req.user);
   if (isValidCourse(req.params.id)) {
     const course = await getCourseById(req.params.id);
@@ -144,7 +145,9 @@ router.get("/:id/roster", requireAuthentication, async (req, res, next) => {
         req.params.id === course.instructorId.toString())
     ) {
       const student_array = await getStudents(req.params.id);
+
       const csv = json2csv(student_array);
+
       const filePath = `${__dirname}/../tmp/${req.params.id}.csv`;
       const result = await fs.writeFile(filePath, csv, (err) => {
         if (err) {
@@ -199,7 +202,7 @@ router.post("/:id/students", requireAuthentication, async (req, res, next) => {
       }
       res.status(200).send();
     } else {
-      next();
+      res.status(403).json({err:"Access forbidden"});
     }
   } else {
     next();
@@ -225,7 +228,8 @@ router.patch("/:id", requireAuthentication, async function (req, res, next) {
           "Either an admin or the instructor of the course can modify the course.",
       });
     }
-
+    console.log(req.body)
+    console.log(validateAgainstSchema(req.body,CourseSchema))
     if (validateAgainstSchema(req.body, CourseSchema)) {
       try {
         const id = req.params.id;
@@ -238,18 +242,18 @@ router.patch("/:id", requireAuthentication, async function (req, res, next) {
         }
       } catch (err) {
         console.error(err);
-        res.status(500).send({
+        res.status(404).send({
           error: "Unable to update specified course.",
         });
       }
     } else {
-      res.status(500).send({
+      res.status(401).send({
         error: "Invalid request body fields.",
       });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send({
+    res.status(404).send({
       error: "Unable to find specified course. ",
     });
   }

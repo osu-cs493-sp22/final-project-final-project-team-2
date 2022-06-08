@@ -58,6 +58,7 @@ router.get('/media/:filename', requireAuthentication, function(req, res, next) {
     ((req.user.role === "instructor") && O(bjectId(req.user).equals(course.instructorId)))
   ){
     file.on('file', function(file) {
+        console.log(file.metadata.mimetype)
       res.status(200).type(file.metadata.mimetype)
     })
     .on('error', function(err) {
