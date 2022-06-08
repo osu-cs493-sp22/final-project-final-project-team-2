@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { ObjectId } = require("mongodb");
 
-const {validateAgainstSchema,isValidAssignment,isValidUser} = require('../lib/validation');
+const {validateAgainstSchema,isValidAssignment,isValidUser, extractValidFields} = require('../lib/validation');
 const {upload,saveFile, removeFile,getAssignmentSubmissions} = require('../models/submissions');
 const {SubmissionSchema} = require('../models/submissions')
 const { requireAuthentication } = require("../lib/auth");
@@ -23,15 +23,19 @@ const {
 
 exports.router = router;
 
-router.post('/:id/submissions',requireAuthentication, upload.single('file'), async(req,res,next)=>{
-    if (
-        req.file &&
-        req.body &&
-        validateAgainstSchema(req.body,SubmissionSchema) &&
-        req.params.id === req.body.assignmentId &&
-        isValidAssignment(req.params.id) &&
-        isValidUser(req.body.studentId)
-    ) {
+router.post('/:id/submissions', requireAuthentication, upload.single('file'), async(req,res,next)=>{
+    // console.log(req.file)
+    // console.log(req.body)
+    // if (
+    //     req.file &&
+    //     req.body &&
+    //     validateAgainstSchema(req.body,SubmissionSchema) &&
+    //     req.params.id === req.body.assignmentId &&
+    //     isValidAssignment(req.params.id) &&
+    //     isValidUser(req.body.studentId)
+    // ) {
+    req.body = extractValidFields(req.body, SubmissionSchema)
+    if (!(Object.keys(req.body).length === 0)) {
         const assignment = await getAssignmentById(req.params.id)
         const course = await getCourseById(assignment.courseId)
 
@@ -53,7 +57,7 @@ router.post('/:id/submissions',requireAuthentication, upload.single('file'), asy
                 }
                 const result = await saveFile(target)
                 res.status(200).send({_id:result.toString()})
-    
+
             } else {
                 removeFile(req.file.path)
                 next()
@@ -63,7 +67,6 @@ router.post('/:id/submissions',requireAuthentication, upload.single('file'), asy
             next()
         }
     } else {
-        removeFile(req.file.path)
         next()
     }
 })
@@ -87,7 +90,9 @@ router.get("/", async function (req, res) {
 
 //Create an Assignment
 router.post("/", requireAuthentication, async function (req, res) {
-  if (validateAgainstSchema(req.body, AssignmentSchema)) {
+
+    req.body = extractValidFields(req.body, AssignmentSchema)
+    if (!(Object.keys(req.body).length === 0)) {
     try {
       const authenticatedUser = await getUserById(req.user);
       console.log("user: ", req.user);
@@ -175,7 +180,8 @@ router.delete("/:id", requireAuthentication, async function (req, res) {
 
 //Update Assignment data by ID
 router.patch("/:id", requireAuthentication, async function (req, res) {
-  if (req.body) {
+  req.body = extractValidFields(req.body, AssignmentSchema)
+  if (!(Object.keys(req.body).length === 0)) {
   try {
     const authenticatedUser = await getUserById(req.user);
     const assignment = await getAssignmentById(req.params.id);
