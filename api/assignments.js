@@ -167,7 +167,7 @@ router.delete("/:id", requireAuthentication, async function (req, res) {
       });
     }
   } catch(err) {
-    res.status(500).send({
+    res.status(404).send({
       error: "Error deleting Assignment. Wrong Assignment Id."
     });
   }
