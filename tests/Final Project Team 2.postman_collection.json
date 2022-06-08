@@ -521,7 +521,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{instructorAuthToken}}",
+									"value": "{{adminAuthToken}}",
 									"type": "string"
 								}
 							]
@@ -530,7 +530,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"term\": \"fa22\"\n}",
+							"raw": "{\n    \"term\": \"su22\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -892,7 +892,7 @@
 								{
 									"key": "file",
 									"type": "file",
-									"src": "/Users/gregoryoertli/Desktop/photos/IMG_1145.jpeg"
+									"src": "/Users/gregoryoertli/Desktop/photos/IMG_1143.png"
 								},
 								{
 									"key": "assignmentId",
@@ -1040,93 +1040,6 @@
 							"raw": "{{url}}{{downloadLink}}",
 							"host": [
 								"{{url}}{{downloadLink}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Deletes",
-			"item": [
-				{
-					"name": "Remove a specific course from the database -- Admin required",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 204\", function () {",
-									"  pm.response.to.have.status(204);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminAuthToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/courses/{{courseId}}",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"courses",
-								"{{courseId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Remove a specific Assignment from the database -- Admin or Instructor Required",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 204\", function () {",
-									"  pm.response.to.have.status(204);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{instructorAuthToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/assignments/{{assignmentId}}",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"assignments",
-								"{{assignmentId}}"
 							]
 						}
 					},
@@ -1614,7 +1527,7 @@
 													"",
 													"pm.test(\"Bad request body\", function() {",
 													"    const responseJson = pm.response.json();",
-													"    pm.expect(responseJson.err).to.eql(\"Bad body\");",
+													"    pm.expect(responseJson.error).to.eql(\"Invalid request body fields.\");",
 													"});"
 												],
 												"type": "text/javascript"
@@ -1636,7 +1549,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{ }",
+											"raw": "{\n    \"hm\" : \"as\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1730,7 +1643,7 @@
 													"",
 													"pm.test(\"Unauthorized User\", function() {",
 													"    const responseJson = pm.response.json();",
-													"    pm.expect(responseJson.error).to.eql(\"Either an admin or the instructor of the course can modify the course.\");",
+													"    pm.expect(responseJson.err).to.eql(\"Invalid authentication token\");",
 													"});",
 													""
 												],
@@ -1744,7 +1657,7 @@
 											"bearer": [
 												{
 													"key": "token",
-													"value": "{{studentAuthToken}}",
+													"value": "{{badAuthToken}}",
 													"type": "string"
 												}
 											]
@@ -2028,7 +1941,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"somethings\": \"wrong\",\n    \"courseId\": \"{{courseId}}\"\n}",
+											"raw": "{\n    \"somethings\": \"wrong\"\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2120,7 +2033,7 @@
 													"",
 													"pm.test(\"Bad Request Body\", function() {",
 													"    const responseJson = pm.response.json();",
-													"    pm.expect(responseJson.error).to.eql(\"Invalid Request Body\");",
+													"    pm.expect(responseJson.error).to.eql(\"The request body did not contain fields related to Assignment objects.\");",
 													"});"
 												],
 												"type": "text/javascript"
@@ -2175,7 +2088,7 @@
 													"",
 													"pm.test(\"Unauthorized User\", function() {",
 													"    const responseJson = pm.response.json();",
-													"    pm.expect(responseJson.error).to.eql(\"Error, only admin or course instructor can update course data.\");",
+													"    pm.expect(responseJson.err).to.eql(\"Invalid authentication token\");",
 													"});",
 													""
 												],
@@ -2189,7 +2102,7 @@
 											"bearer": [
 												{
 													"key": "token",
-													"value": "{{studentAuthToken}}",
+													"value": "{{badAuthToken}}",
 													"type": "string"
 												}
 											]
@@ -2236,7 +2149,7 @@
 													"",
 													"pm.test(\"Unauthorized User\", function() {",
 													"    const responseJson = pm.response.json();",
-													"    pm.expect(responseJson.error).to.eql(\"Error, only admin or course instructor can delete course.\");",
+													"    pm.expect(responseJson.err).to.eql(\"Invalid authentication token\");",
 													"});",
 													""
 												],
@@ -2250,7 +2163,7 @@
 											"bearer": [
 												{
 													"key": "token",
-													"value": "{{studentAuthToken}}",
+													"value": "{{badAuthToken}}",
 													"type": "string"
 												}
 											]
@@ -2437,6 +2350,93 @@
 							]
 						}
 					]
+				}
+			]
+		},
+		{
+			"name": "Deletes",
+			"item": [
+				{
+					"name": "Remove a specific course from the database -- Admin required",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminAuthToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/courses/{{courseId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"courses",
+								"{{courseId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove a specific Assignment from the database -- Admin or Instructor Required",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{instructorAuthToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/assignments/{{assignmentId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"assignments",
+								"{{assignmentId}}"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}
