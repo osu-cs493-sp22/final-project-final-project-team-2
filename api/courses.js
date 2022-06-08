@@ -6,6 +6,7 @@ const {
   validateAgainstSchema,
   isValidUser,
   isValidCourse,
+  extractValidFields
 } = require("../lib/validation");
 
 const { ObjectId } = require("mongodb");
@@ -228,9 +229,8 @@ router.patch("/:id", requireAuthentication, async function (req, res, next) {
           "Either an admin or the instructor of the course can modify the course.",
       });
     }
-    console.log(req.body)
-    console.log(validateAgainstSchema(req.body,CourseSchema))
-    if (validateAgainstSchema(req.body, CourseSchema)) {
+    req.body = extractValidFields(req.body, CourseSchema)
+    if (!(Object.keys(req.body).length === 0)) {
       try {
         const id = req.params.id;
         const updateSuccessful = await updateCourseById(id, req.body);
@@ -247,7 +247,7 @@ router.patch("/:id", requireAuthentication, async function (req, res, next) {
         });
       }
     } else {
-      res.status(401).send({
+      res.status(400).send({
         error: "Invalid request body fields.",
       });
     }
